@@ -1,52 +1,3 @@
-venv/
-.venv/
-__pycache__/
-*.pyc
-.DS_Store
-
-# Datasets
-data/
-hdfs_extracted/
-HDFS_v1.zip
-
-# Model weights
-*.pt
-*.pth
-*.ckpt
-*.safetensors
-
-# Generated results
-results/
-
-# Environment variables
-.env
-.env.*
-!.env.example
-venv/
-.venv/
-__pycache__/
-*.pyc
-.DS_Store
-
-# Datasets
-data/
-hdfs_extracted/
-HDFS_v1.zip
-
-# Model weights
-*.pt
-*.pth
-*.ckpt
-*.safetensors
-
-# Generated results
-results/
-
-# Environment variables
-.env
-.env.*
-!.env.example
-
 # Virtual environments
 venv/
 .venv/
@@ -54,27 +5,33 @@ env/
 
 # Python cache
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
 
-# Mac system files
+# OS
 .DS_Store
 
-# Datasets
+# Datasets (download separately; see README)
 data/
 hdfs_extracted/
 HDFS_v1.zip
 
-# Model weights
+# Model weights (created by training)
+models/
 *.pt
 *.pth
 *.ckpt
 *.safetensors
 *.onnx
 
-# Generated results
-results/
+# Generated results (curated run logs are kept)
+results/*
+!results/logs/
 
 # Environment variables
 .env
 .env.*
+!.env.example
+
+# Editor
+.vscode/
+.idea/

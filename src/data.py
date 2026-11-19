@@ -44,6 +44,23 @@ URLS = {
 }
 
 
+# Column names that hold a whole event sequence (compared lower-cased).
+_SEQ_COL_NAMES = {"features", "sequence", "eventsequence", "event_sequence",
+                  "events", "eventtrace", "event_trace", "trace"}
+# Wide-format event column headers: "E1", "E22", or bare positions "0", "1".
+_EVENT_ID_RE    = re.compile(r"E?\d+")
+# A single event token after normalisation.
+_EVENT_TOKEN_RE = re.compile(r"E\d+")
+
+
+def _normalise_event_list(raw) -> str:
+    """'[E5,E22,E5]' / "['E5', 'E22']" / 'E5 E22' -> 'E5 E22 E5'."""
+    text = str(raw)
+    if text in ("nan", ""):
+        return ""
+    return " ".join(t for t in re.split(r"[\s,\[\]'\"]+", text) if t)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Layout A — Event_traces.csv  (best: already session-grouped)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -52,9 +69,12 @@ def _load_from_event_traces(traces_path: Path, label_path: Path) -> pd.DataFrame
     """
     Event_traces.csv from HDFS_v1 preprocessed/:
       Each row = one block session, columns vary by version.
-      Common formats:
-        BlockId, E1 E2 E3 ...          (space-separated in one column)
+      Supported formats:
+        BlockId, Label, Type, Features, TimeInterval, Latency
+                                       (loghub HDFS_v1; Features = "[E5,E22,...]")
+        BlockId, EventSequence         (space/comma-separated in one column)
         BlockId, E1, E2, E3, ...       (one event per column)
+      Only the event column(s) become tokens; anything else raises ValueError.
     """
     logger.info(f"  Loading Event_traces.csv "
                 f"({traces_path.stat().st_size // 1024 // 1024} MB)...")
@@ -63,37 +83,52 @@ def _load_from_event_traces(traces_path: Path, label_path: Path) -> pd.DataFrame
     logger.info(f"  Rows       : {len(df):,}")
 
     # ── Detect and normalise format ────────────────────────────────────────────
+    # Only event-ID columns may feed the token sequence. Label, Type,
+    # TimeInterval, Latency and any other metadata/numeric columns are never
+    # used: joining them in leaks the label into the input and floods the
+    # vocabulary with timing values.
     col_lower = {c: c.lower().strip() for c in df.columns}
 
     block_col = next((c for c, lc in col_lower.items()
                       if "block" in lc), None)
     seq_col   = next((c for c, lc in col_lower.items()
-                      if any(k in lc for k in
-                             ("sequence","eventsequence","events","trace"))),
-                     None)
+                      if lc in _SEQ_COL_NAMES), None)
+    wide_cols = [c for c in df.columns
+                 if c != block_col and _EVENT_ID_RE.fullmatch(str(c).strip())]
 
     if seq_col:
-        # Standard format: BlockId + one sequence column
-        sessions_df = pd.DataFrame({
-            "BlockId":  df[block_col].astype(str) if block_col else
-                        [f"BLK_{i}" for i in range(len(df))],
-            "Sequence": df[seq_col].astype(str),
-        })
-    elif block_col:
-        # Wide format: BlockId + one event per column → join them
-        event_cols = [c for c in df.columns if c != block_col]
-        sessions_df = pd.DataFrame({
-            "BlockId":  df[block_col].astype(str),
-            "Sequence": df[event_cols].astype(str).apply(
-                lambda r: " ".join(v for v in r if v not in ("nan","","-")), axis=1
-            ),
-        })
+        # One sequence column: loghub's "Features" ("[E5,E22,...]") or a
+        # space/comma-separated "EventSequence"-style column.
+        logger.info(f"  Event sequence column: {seq_col!r}")
+        sequences = df[seq_col].apply(_normalise_event_list)
+    elif wide_cols:
+        # Wide format: one event per column, columns named E1, E2, ... or 0, 1, ...
+        logger.info(f"  Event columns (wide format): {len(wide_cols)}")
+        sequences = df[wide_cols].astype(str).apply(
+            lambda r: _normalise_event_list(" ".join(
+                v for v in r if v not in ("nan", "", "-"))), axis=1
+        )
     else:
-        # Single column of space-separated events
-        sessions_df = pd.DataFrame({
-            "BlockId":  [f"BLK_{i}" for i in range(len(df))],
-            "Sequence": df.iloc[:, 0].astype(str),
-        })
+        raise ValueError(
+            f"{traces_path.name}: no recognisable event-sequence column. "
+            f"Expected one of {sorted(_SEQ_COL_NAMES)} (loghub HDFS_v1 uses "
+            f"'Features') or event columns named like E1, E2, ... "
+            f"Found columns: {list(df.columns)}"
+        )
+
+    bad = sequences[sequences.str.split().apply(
+        lambda toks: any(not _EVENT_TOKEN_RE.fullmatch(t) for t in toks))]
+    if len(bad):
+        raise ValueError(
+            f"{traces_path.name}: column {seq_col or wide_cols[:3]!r} contains "
+            f"values that are not event IDs (e.g. {bad.iloc[0][:80]!r})"
+        )
+
+    sessions_df = pd.DataFrame({
+        "BlockId":  df[block_col].astype(str) if block_col else
+                    [f"BLK_{i}" for i in range(len(df))],
+        "Sequence": sequences,
+    })
 
     # ── Merge anomaly labels ───────────────────────────────────────────────────
     label_map = {}

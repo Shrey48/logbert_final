@@ -2,7 +2,7 @@
 """
 main.py
 =======================================================
-LogBERT: Real-Time Log Anomaly Detection using Transformers
+LogBERT: Log Anomaly Detection using Transformers
 =======================================================
 """
 
@@ -44,7 +44,7 @@ def _banner():
     print()
     print("  ╔══════════════════════════════════════════════════════════╗")
     print("  ║                                                          ║")
-    print("  ║   LogBERT — Real-Time Log Anomaly Detection             ║")
+    print("  ║   LogBERT — Log Anomaly Detection                       ║")
     print("  ║   Transformer-Based Big Data Engineering Project        ║")
     print("  ║                                                          ║")
     print(f"  ║   Device  : {gpu:<44} ║")

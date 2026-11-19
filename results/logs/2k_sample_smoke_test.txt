@@ -1,4 +1,3 @@
-(base) shreysalvi@Shreys-MacBook-Air-2 logbert_final % ./run.sh
 
   LogBERT — Log Anomaly Detection
   ─────────────────────────────────
@@ -202,4 +201,3 @@ weighted avg       0.90      0.93      0.91      1994
   ╚══════════════════════════════════════════════════════════╝
 
 11:54:47 | SUCCESS  | Total runtime: 0.7 min
-(base) shreysalvi@Shreys-MacBook-Air-2 logbert_final % x

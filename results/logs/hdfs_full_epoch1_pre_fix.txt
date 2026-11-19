@@ -1,4 +1,3 @@
-(base) shreysalvi@Shreys-MacBook-Air-2 logbert_final % ./run.sh
 
   LogBERT — Log Anomaly Detection
   ─────────────────────────────────
