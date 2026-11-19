@@ -1,0 +1,80 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Datasets
+data/
+hdfs_extracted/
+HDFS_v1.zip
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Generated results
+results/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Datasets
+data/
+hdfs_extracted/
+HDFS_v1.zip
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Generated results
+results/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Mac system files
+.DS_Store
+
+# Datasets
+data/
+hdfs_extracted/
+HDFS_v1.zip
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+
+# Generated results
+results/
+
+# Environment variables
+.env
+.env.*

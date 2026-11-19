@@ -1,0 +1,205 @@
+(base) shreysalvi@Shreys-MacBook-Air-2 logbert_final % ./run.sh
+
+  LogBERT — Log Anomaly Detection
+  ─────────────────────────────────
+
+[→] Python 3.10
+[→] Activating virtual environment...
+[→] Checking dependencies...
+[✓] All dependencies present
+  GPU : Apple MPS (Mac GPU) — enabled ✓
+  OS  : Darwin arm64
+  Torch: 2.11.0
+
+
+  ╔══════════════════════════════════════════════════════════╗
+  ║                                                          ║
+  ║   LogBERT — Real-Time Log Anomaly Detection             ║
+  ║   Transformer-Based Big Data Engineering Project        ║
+  ║                                                          ║
+  ║   Device  : Apple Silicon (MPS)                          ║
+  ║   PyTorch : 2.11.0                                       ║
+  ║                                                          ║
+  ╚══════════════════════════════════════════════════════════╝
+
+
+  ┌──────────────────────────────────────────────────────┐
+  │  PHASE 1  Download & Parse Real HDFS Dataset           │
+  └──────────────────────────────────────────────────────┘
+
+11:54:05 | INFO     |   Downloading HDFS structured logs (2k sample)...
+11:54:05 | SUCCESS  |   HDFS structured logs (2k sample) → HDFS_structured.csv (404 KB)
+11:54:05 | INFO     |   Downloading anomaly labels...
+11:54:06 | DEBUG    |   fetch failed (https://raw.githubusercontent.com/logpai/loghub/master/HDFS/HDFS_v1/anomaly_label.csv): 404 Client Error: Not Found for url: https://raw.githubusercontent.com/logpai/loghub/master/HDFS/HDFS_v1/anomaly_label.csv
+11:54:06 | INFO     |   Downloading anomaly labels...
+11:54:06 | DEBUG    |   fetch failed (https://raw.githubusercontent.com/logpai/loghub/master/HDFS/anomaly_label.csv): 404 Client Error: Not Found for url: https://raw.githubusercontent.com/logpai/loghub/master/HDFS/anomaly_label.csv
+11:54:06 | INFO     |   Downloading anomaly labels...
+11:54:06 | DEBUG    |   fetch failed (https://raw.githubusercontent.com/logpai/loghub/2.0/HDFS/HDFS_v1/anomaly_label.csv): 404 Client Error: Not Found for url: https://raw.githubusercontent.com/logpai/loghub/2.0/HDFS/HDFS_v1/anomaly_label.csv
+11:54:06 | WARNING  |   No anomaly labels found — injecting synthetic anomalies
+11:54:06 | WARNING  |   (anomaly_ratio=6.7% matching real HDFS distribution)
+11:54:06 | SUCCESS  |   Synthetic anomalies injected: 133 (6.7%)
+11:54:06 | INFO     |   NOTE: For real evaluation, use the full HDFS dataset with true labels
+11:54:06 | SUCCESS  |   Dataset ready: 1,994 sessions | 1,861 normal | 133 anomaly (6.7%)
+11:54:06 | WARNING  | 
+  ┌─────────────────────────────────────────────────────────────┐
+  │  Using the 2k SAMPLE (2,000 log lines).                    │
+  │                                                             │
+  │  For the FULL dataset (11M lines, 575k sessions):          │
+  │    See README for download instructions.                    │
+  └─────────────────────────────────────────────────────────────┘
+
+11:54:06 | INFO     |   Sessions  : 1,994
+11:54:06 | INFO     |   Normal    : 1,861
+11:54:06 | INFO     |   Anomaly   : 133
+11:54:06 | INFO     |   Vocabulary: 19 unique event tokens
+11:54:06 | SUCCESS  | Phase 1 complete  [1.4s]
+
+  ┌──────────────────────────────────────────────────────┐
+  │  PHASE 2  Train LogBERT (Masked Log-Key Prediction)    │
+  └──────────────────────────────────────────────────────┘
+
+11:54:06 | INFO     |   Train sessions (normal only) : 1,674
+11:54:06 | INFO     |   Test  sessions (all)          : 1,994
+11:54:07 | INFO     |   LogBERT | vocab=19 | params=3,362,067 | device=mps
+11:54:07 | INFO     |     step   0/53 | loss 3.0033 | lr 5.66e-06
+11:54:08 | INFO     |     step  20/53 | loss 2.3571 | lr 1.19e-04
+11:54:08 | INFO     |     step  40/53 | loss 2.2009 | lr 2.32e-04
+11:54:09 | INFO     |   Epoch 1/10 | avg_loss=2.3973 | 2s
+11:54:09 | INFO     |   Checkpoint saved (epoch 1 safety) → models/logbert_best.pt
+11:54:09 | INFO     |     step   0/53 | loss 2.0300 | lr 2.99e-04
+11:54:10 | INFO     |     step  20/53 | loss 2.0817 | lr 2.87e-04
+11:54:10 | INFO     |     step  40/53 | loss 2.1317 | lr 2.74e-04
+11:54:11 | INFO     |   Epoch 2/10 | avg_loss=2.1417 | 2s
+11:54:15 | INFO     | 
+              precision    recall  f1-score   support
+
+      Normal       0.94      0.98      0.96      1861
+     Anomaly       0.28      0.08      0.13       133
+
+    accuracy                           0.92      1994
+   macro avg       0.61      0.53      0.54      1994
+weighted avg       0.89      0.92      0.91      1994
+
+11:54:15 | SUCCESS  |   ✓ New best — F1=0.1279 → saved to models/logbert_best.pt
+11:54:15 | INFO     |     step   0/53 | loss 2.0582 | lr 2.66e-04
+11:54:15 | INFO     |     step  20/53 | loss 2.0111 | lr 2.53e-04
+11:54:16 | INFO     |     step  40/53 | loss 1.7980 | lr 2.41e-04
+11:54:16 | INFO     |   Epoch 3/10 | avg_loss=2.0843 | 2s
+11:54:16 | INFO     |     step   0/53 | loss 2.1135 | lr 2.33e-04
+11:54:17 | INFO     |     step  20/53 | loss 1.9522 | lr 2.20e-04
+11:54:18 | INFO     |     step  40/53 | loss 2.1333 | lr 2.08e-04
+11:54:18 | INFO     |   Epoch 4/10 | avg_loss=2.0612 | 2s
+11:54:22 | INFO     | 
+              precision    recall  f1-score   support
+
+      Normal       0.94      0.98      0.96      1861
+     Anomaly       0.33      0.11      0.17       133
+
+    accuracy                           0.93      1994
+   macro avg       0.64      0.55      0.56      1994
+weighted avg       0.90      0.93      0.91      1994
+
+11:54:22 | SUCCESS  |   ✓ New best — F1=0.1685 → saved to models/logbert_best.pt
+11:54:22 | INFO     |     step   0/53 | loss 2.1730 | lr 1.99e-04
+11:54:22 | INFO     |     step  20/53 | loss 2.1377 | lr 1.87e-04
+11:54:23 | INFO     |     step  40/53 | loss 2.2061 | lr 1.74e-04
+11:54:23 | INFO     |   Epoch 5/10 | avg_loss=2.0770 | 2s
+11:54:23 | INFO     |     step   0/53 | loss 2.0203 | lr 1.66e-04
+11:54:24 | INFO     |     step  20/53 | loss 2.0199 | lr 1.53e-04
+11:54:25 | INFO     |     step  40/53 | loss 2.0011 | lr 1.41e-04
+11:54:25 | INFO     |   Epoch 6/10 | avg_loss=2.0693 | 2s
+11:54:28 | INFO     | 
+              precision    recall  f1-score   support
+
+      Normal       0.94      0.98      0.96      1861
+     Anomaly       0.39      0.14      0.20       133
+
+    accuracy                           0.93      1994
+   macro avg       0.67      0.56      0.58      1994
+weighted avg       0.90      0.93      0.91      1994
+
+11:54:29 | SUCCESS  |   ✓ New best — F1=0.2011 → saved to models/logbert_best.pt
+11:54:29 | INFO     |     step   0/53 | loss 1.8543 | lr 1.33e-04
+11:54:29 | INFO     |     step  20/53 | loss 1.9473 | lr 1.20e-04
+11:54:30 | INFO     |     step  40/53 | loss 1.9921 | lr 1.08e-04
+11:54:30 | INFO     |   Epoch 7/10 | avg_loss=2.0465 | 2s
+11:54:30 | INFO     |     step   0/53 | loss 1.9647 | lr 9.94e-05
+11:54:31 | INFO     |     step  20/53 | loss 2.0960 | lr 8.68e-05
+11:54:31 | INFO     |     step  40/53 | loss 2.1895 | lr 7.42e-05
+11:54:32 | INFO     |   Epoch 8/10 | avg_loss=2.0411 | 2s
+11:54:35 | INFO     | 
+              precision    recall  f1-score   support
+
+      Normal       0.94      0.99      0.96      1861
+     Anomaly       0.38      0.11      0.17       133
+
+    accuracy                           0.93      1994
+   macro avg       0.66      0.55      0.57      1994
+weighted avg       0.90      0.93      0.91      1994
+
+11:54:35 | INFO     |     step   0/53 | loss 2.0433 | lr 6.60e-05
+11:54:36 | INFO     |     step  20/53 | loss 2.0483 | lr 5.35e-05
+11:54:37 | INFO     |     step  40/53 | loss 1.7652 | lr 4.09e-05
+11:54:37 | INFO     |   Epoch 9/10 | avg_loss=2.0385 | 2s
+11:54:37 | INFO     |     step   0/53 | loss 2.0296 | lr 3.27e-05
+11:54:38 | INFO     |     step  20/53 | loss 2.2952 | lr 2.01e-05
+11:54:38 | INFO     |     step  40/53 | loss 2.2338 | lr 7.55e-06
+11:54:39 | INFO     |   Epoch 10/10 | avg_loss=2.0248 | 2s
+11:54:42 | INFO     | 
+              precision    recall  f1-score   support
+
+      Normal       0.94      0.98      0.96      1861
+     Anomaly       0.38      0.14      0.20       133
+
+    accuracy                           0.93      1994
+   macro avg       0.66      0.56      0.58      1994
+weighted avg       0.90      0.93      0.91      1994
+
+11:54:42 | SUCCESS  | Phase 2 complete  [35.6s]
+
+  ┌──────────────────────────────────────────────────────┐
+  │  PHASE 3  Evaluate: Precision / Recall / F1 / ROC-AUC  │
+  └──────────────────────────────────────────────────────┘
+
+11:54:42 | SUCCESS  |   Loaded model (epoch 6, train F1=0.2011)
+11:54:46 | INFO     |   Optimal threshold: 0.005
+11:54:46 | SUCCESS  |   Metrics saved → results/metrics.json
+11:54:46 | SUCCESS  | Phase 3 complete  [3.6s]
+
+  ┌──────────────────────────────────────────────────────┐
+  │  PHASE 4  Save Results & Generate Plots                │
+  └──────────────────────────────────────────────────────┘
+
+11:54:46 | SUCCESS  |   Plot saved → results/score_distribution.png
+11:54:46 | SUCCESS  |   Plot saved → results/roc_curve.png
+11:54:47 | SUCCESS  |   Plot saved → results/pr_curve.png
+11:54:47 | SUCCESS  |   Plot saved → results/confusion_matrix.png
+11:54:47 | SUCCESS  |   Plot saved → results/training_history.png
+11:54:47 | SUCCESS  |   Saved → results/session_scores.csv
+11:54:47 | SUCCESS  | Phase 4 complete  [1.0s]
+
+  ╔══════════════════════════════════════════════════════════╗
+  ║                  FINAL RESULTS                          ║
+  ╠══════════════════════════════════════════════════════════╣
+  ║  Precision      : 0.3600                               ║
+  ║  Recall         : 0.1353                               ║
+  ║  F1 Score       : 0.1967                               ║
+  ║  ROC-AUC        : 0.5591                               ║
+  ║  PR-AUC         : 0.2765                               ║
+  ║  Accuracy       : 0.9263                               ║
+  ╠══════════════════════════════════════════════════════════╣
+  ║  True  Positives: 18     (anomalies correctly caught)  ║
+  ║  False Positives: 32     (false alarms)                ║
+  ║  False Negatives: 115    (missed anomalies)            ║
+  ╠══════════════════════════════════════════════════════════╣
+  ║  Output files:                                          ║
+  ║    results/metrics.json                                 ║
+  ║    results/session_scores.csv                           ║
+  ║    results/score_distribution.png                       ║
+  ║    results/roc_curve.png                                ║
+  ║    results/confusion_matrix.png                         ║
+  ║    results/training_history.png                         ║
+  ╚══════════════════════════════════════════════════════════╝
+
+11:54:47 | SUCCESS  | Total runtime: 0.7 min
+(base) shreysalvi@Shreys-MacBook-Air-2 logbert_final % x
